@@ -1,0 +1,368 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics - Environmental Data{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <!-- City Filter -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <h4 class="mb-0"><i class="fas fa-chart-pie"></i> Environmental Analytics</h4>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center justify-content-md-end">
+                                <label class="me-2 mb-0"><strong>Filter by City:</strong></label>
+                                <select class="form-select w-auto" onchange="window.location.href='/analytics?city_id=' + this.value">
+                                    <option value="all" {% if selected_city == 'all' %}selected{% endif %}>All Cities</option>
+                                    {% for city in cities_list %}
+                                    <option value="{{ city.city_id }}" {% if selected_city|string == city.city_id|string %}selected{% endif %}>{{ city.city_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Vehicle Distribution -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-car"></i> Vehicle Distribution by City</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="vehicleChart" height="80"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Emissions by City -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0"><i class="fas fa-smog"></i> Emissions by City</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="emissionsChart" height="80"></canvas>
+                    <div class="table-responsive mt-4">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>City</th>
+                                    <th>Transport</th>
+                                    <th>Construction</th>
+                                    <th>Industry</th>
+                                    <th>Residential</th>
+                                    <th>Other</th>
+                                    <th>Total Pollution</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for emission in emissions_data %}
+                                <tr>
+                                    <td><strong>{{ emission.city_name }}</strong></td>
+                                    <td>{{ "%.2f"|format(emission.pollution_transport) }}</td>
+                                    <td>{{ "%.2f"|format(emission.pollution_construction) }}</td>
+                                    <td>{{ "%.2f"|format(emission.pollution_industry) }}</td>
+                                    <td>{{ "%.2f"|format(emission.pollution_residential) }}</td>
+                                    <td>{{ "%.2f"|format(emission.pollution_other) }}</td>
+                                    <td><span class="badge bg-danger">{{ "%.2f"|format(emission.total_pollution) }}</span></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Population Data -->
+    <div class="row mb-4">
+        <div class="col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-users"></i> Population Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="populationChart" height="150"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Public Transport -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-bus"></i> Public Transport</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="transportChart" height="150"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Energy Sources -->
+    <div class="row mb-4">
+        <div class="col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="fas fa-bolt"></i> Sources of Energy</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>City</th>
+                                    <th>Coal (GW)</th>
+                                    <th>Wind (GW)</th>
+                                    <th>Hydro (GW)</th>
+                                    <th>Nuclear (GW)</th>
+                                    <th>Solar (GW)</th>
+                                    <th>Total (GW)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for energy in energy_data %}
+                                <tr>
+                                    <td><strong>{{ energy.city_name }}</strong></td>
+                                    <td>{{ energy.coal_gw or 0 }}</td>
+                                    <td>{{ energy.wind_gw or 0 }}</td>
+                                    <td>{{ energy.hydro_gw or 0 }}</td>
+                                    <td>{{ energy.nuclear_gw or 0 }}</td>
+                                    <td>{{ energy.solar_gw or 0 }}</td>
+                                    <td><strong>{{ energy.total_gw or 0 }}</strong></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Waste Management -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0"><i class="fas fa-recycle"></i> Waste Management</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="wasteChart" height="150"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js Scripts -->
+<script>
+// Vehicle Distribution Chart
+const vehicleCtx = document.getElementById('vehicleChart').getContext('2d');
+const vehicleData = {{ vehicle_data | tojson | safe }};
+
+// Group by city_name
+const vehicleByCity = {};
+vehicleData.forEach(v => {
+    if (!vehicleByCity[v.city_name]) {
+        vehicleByCity[v.city_name] = {
+            '2_wheeler': 0,
+            '4_wheeler': 0,
+            'heavy_vehicle': 0
+        };
+    }
+    vehicleByCity[v.city_name][v.vehicle_id] = v.vehicle_count;
+});
+
+new Chart(vehicleCtx, {
+    type: 'bar',
+    data: {
+        labels: Object.keys(vehicleByCity),
+        datasets: [{
+            label: 'Two Wheelers',
+            data: Object.values(vehicleByCity).map(v => v['2_wheeler']),
+            backgroundColor: 'rgba(54, 162, 235, 0.7)'
+        }, {
+            label: 'Four Wheelers',
+            data: Object.values(vehicleByCity).map(v => v['4_wheeler']),
+            backgroundColor: 'rgba(75, 192, 192, 0.7)'
+        }, {
+            label: 'Heavy Vehicles',
+            data: Object.values(vehicleByCity).map(v => v['heavy_vehicle']),
+            backgroundColor: 'rgba(255, 99, 132, 0.7)'
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: function(value) {
+                        return value.toLocaleString();
+                    }
+                }
+            }
+        },
+        plugins: {
+            title: {
+                display: true,
+                text: 'Vehicle Distribution by City'
+            },
+            legend: {
+                display: true,
+                position: 'top'
+            }
+        }
+    }
+});
+
+// Emissions Chart
+const emissionsCtx = document.getElementById('emissionsChart').getContext('2d');
+const emissionsData = {{ emissions_data | tojson | safe }};
+
+new Chart(emissionsCtx, {
+    type: 'bar',
+    data: {
+        labels: emissionsData.map(e => e.city_name),
+        datasets: [{
+            label: 'Total Pollution',
+            data: emissionsData.map(e => e.total_pollution),
+            backgroundColor: 'rgba(220, 53, 69, 0.7)',
+            borderColor: 'rgba(220, 53, 69, 1)',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+
+// Population Chart
+const populationCtx = document.getElementById('populationChart').getContext('2d');
+const populationData = {{ population_data | tojson | safe }};
+
+new Chart(populationCtx, {
+    type: 'doughnut',
+    data: {
+        labels: populationData.map(p => p.city_name),
+        datasets: [{
+            data: populationData.map(p => p.total_population),
+            backgroundColor: [
+                'rgba(255, 99, 132, 0.7)',
+                'rgba(54, 162, 235, 0.7)',
+                'rgba(255, 206, 86, 0.7)',
+                'rgba(75, 192, 192, 0.7)',
+                'rgba(153, 102, 255, 0.7)',
+                'rgba(255, 159, 64, 0.7)',
+                'rgba(201, 203, 207, 0.7)',
+                'rgba(83, 102, 255, 0.7)',
+                'rgba(255, 102, 178, 0.7)',
+                'rgba(102, 255, 178, 0.7)'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'right'
+            }
+        }
+    }
+});
+
+// Public Transport Chart
+const transportCtx = document.getElementById('transportChart').getContext('2d');
+const transportData = {{ transport_data | tojson | safe }};
+
+new Chart(transportCtx, {
+    type: 'bar',
+    data: {
+        labels: transportData.map(t => t.city_name),
+        datasets: [{
+            label: 'Diesel Buses',
+            data: transportData.map(t => t.diesel_bus_count || 0),
+            backgroundColor: 'rgba(255, 193, 7, 0.7)',
+            borderColor: 'rgba(255, 193, 7, 1)',
+            borderWidth: 1
+        }, {
+            label: 'CNG Buses',
+            data: transportData.map(t => t.cng_bus_count || 0),
+            backgroundColor: 'rgba(40, 167, 69, 0.7)',
+            borderColor: 'rgba(40, 167, 69, 1)',
+            borderWidth: 1
+        }, {
+            label: 'Electric Buses',
+            data: transportData.map(t => t.electric_bus_count || 0),
+            backgroundColor: 'rgba(0, 123, 255, 0.7)',
+            borderColor: 'rgba(0, 123, 255, 1)',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true,
+                title: {
+                    display: true,
+                    text: 'Number of Buses'
+                }
+            }
+        },
+        plugins: {
+            legend: {
+                display: true,
+                position: 'top'
+            }
+        }
+    }
+});
+
+// Waste Management Chart
+const wasteCtx = document.getElementById('wasteChart').getContext('2d');
+const wasteData = {{ waste_data | tojson | safe }};
+
+new Chart(wasteCtx, {
+    type: 'bar',
+    data: {
+        labels: wasteData.map(w => w.city_name),
+        datasets: [{
+            label: 'Total Waste Generated (tons)',
+            data: wasteData.map(w => w.total_waste_generated),
+            backgroundColor: 'rgba(108, 117, 125, 0.7)'
+        }, {
+            label: 'Waste Recycled (tons)',
+            data: wasteData.map(w => w.waste_recycled),
+            backgroundColor: 'rgba(40, 167, 69, 0.7)'
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

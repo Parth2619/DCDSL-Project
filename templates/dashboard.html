@@ -1,0 +1,538 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Remove blue line from input on hover/focus */
+    #citySearchInput,
+    #citySearchInput:hover,
+    #citySearchInput:focus,
+    #citySearchInput:active {
+        border-bottom: 1px solid #dee2e6 !important;
+        box-shadow: none !important;
+    }
+    
+    #citySearchInput:focus {
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25) !important;
+        border-bottom: 1px solid #dee2e6 !important;
+    }
+    
+    /* Ensure input group doesn't show extra borders */
+    .input-group-lg .form-control.border-start-0.border-end-0 {
+        border-bottom: 1px solid #dee2e6 !important;
+    }
+    
+    /* Remove any outline or border on datalist interaction */
+    input[list]:focus::-webkit-list-button {
+        display: none;
+    }
+</style>
+{% endblock %}
+
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <!-- Page Title -->
+    <div class="text-center mb-4">
+        <h1 class="display-4 fw-bold text-primary">
+            Air Quality Monitoring System
+        </h1>
+    </div>
+    
+    <!-- Google-Style Search Bar -->
+    <div class="row justify-content-center mb-5">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-lg">
+                <div class="card-body p-4">
+                    <div class="input-group input-group-lg">
+                        <span class="input-group-text bg-white border-end-0">
+                            <i class="fas fa-search text-primary"></i>
+                        </span>
+                        <input type="text" 
+                               class="form-control border-start-0 border-end-0" 
+                               id="citySearchInput"
+                               placeholder="Search for a city to view live air quality data..."
+                               list="cityOptions"
+                               autocomplete="off">
+                        <datalist id="cityOptions">
+                            <option value="Delhi">
+                            <option value="Mumbai">
+                            <option value="Bangalore">
+                            <option value="Chennai">
+                            <option value="Kolkata">
+                            <option value="Hyderabad">
+                            <option value="Pune">
+                            <option value="Bhopal">
+                            <option value="Jaipur">
+                            <option value="Lucknow">
+                        </datalist>
+                        <button class="btn btn-primary px-4" type="button" onclick="searchCity()">
+                            <i class="fas fa-search"></i> Search
+                        </button>
+                    </div>
+                    <small class="text-muted d-block mt-2 text-center">
+                        <i class="fas fa-info-circle"></i> Search any city to view live AQI, weather data, and historical trends
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Results Section (Initially Hidden) -->
+    <div id="searchResults" class="d-none">
+        <div class="row g-4 mb-4">
+            <!-- Live AQI Card -->
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-wind"></i> Live Air Quality</h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <h2 class="display-3 mb-0" id="live_aqi">--</h2>
+                        <p class="text-muted">Air Quality Index</p>
+                        <div id="aqi_category" class="mt-2"></div>
+                        <small id="aqi_message" class="d-block mt-2"></small>
+                        <div id="aqi_composition" class="mt-3">
+                            <!-- AQI composition details -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Live Weather Card -->
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="fas fa-cloud-sun"></i> Live Weather</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="weather_data">
+                            <!-- Weather details -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- City Info Card -->
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="fas fa-info-circle"></i> City Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <h4 id="city_name">--</h4>
+                        <p class="text-muted mb-3" id="city_state">--</p>
+                        <div id="city_stats">
+                            <!-- City statistics -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monthly AQI Trends -->
+        <div class="row g-4 mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0"><i class="fas fa-chart-line"></i> AQI Trends for <span id="trend_city">--</span></h5>
+                            <select class="form-select w-auto" id="monthFilter" onchange="updateTrends()">
+                                <option value="all">All Months (2024)</option>
+                                <option value="1">January 2024</option>
+                                <option value="2">February 2024</option>
+                                <option value="3">March 2024</option>
+                                <option value="4">April 2024</option>
+                                <option value="5">May 2024</option>
+                                <option value="6">June 2024</option>
+                                <option value="7">July 2024</option>
+                                <option value="8">August 2024</option>
+                                <option value="9">September 2024</option>
+                                <option value="10">October 2024</option>
+                                <option value="11">November 2024</option>
+                                <option value="12">December 2024</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="trendsChart" height="60"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Statistics Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1">Total Cities</p>
+                            <h3 class="mb-0">{{ stats.total_cities }}</h3>
+                        </div>
+                        <div class="stats-icon bg-primary">
+                            <i class="fas fa-city"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1">Monitoring Stations</p>
+                            <h3 class="mb-0">{{ stats.total_stations }}</h3>
+                        </div>
+                        <div class="stats-icon bg-success">
+                            <i class="fas fa-broadcast-tower"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1">AQI Records</p>
+                            <h3 class="mb-0">{{ "{:,}".format(stats.total_aqi_records) }}</h3>
+                        </div>
+                        <div class="stats-icon bg-info">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        {% if role == 'admin' %}
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1">Total Users</p>
+                            <h3 class="mb-0">{{ stats.total_users }}</h3>
+                        </div>
+                        <div class="stats-icon bg-warning">
+                            <i class="fas fa-users"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+let currentCityData = null;
+
+// Search city function
+function searchCity() {
+    const cityName = document.getElementById('citySearchInput').value.trim();
+    if (!cityName) {
+        alert('Please enter a city name');
+        return;
+    }
+    
+    // Show loading
+    document.getElementById('searchResults').classList.remove('d-none');
+    document.getElementById('live_aqi').textContent = 'Loading...';
+    
+    // Fetch city data from backend
+    fetch(`/api/city-search?city=${encodeURIComponent(cityName)}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert(data.error);
+                return;
+            }
+            
+            currentCityData = data;
+            displayCityData(data);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to fetch city data. Using sample data for demo.');
+            displaySampleData(cityName);
+        });
+}
+
+// Display city data
+function displayCityData(data) {
+    // Live AQI
+    document.getElementById('live_aqi').textContent = data.live_aqi || '--';
+    document.getElementById('live_aqi').className = `display-3 mb-0 text-${getAQIColor(data.live_aqi)}`;
+
+    // Health Impact (display under live AQI value)
+    const categoryBadge = document.getElementById('aqi_category');
+    const messageText = document.getElementById('aqi_message');
+    if (data.health_impact) {
+        categoryBadge.innerHTML = `<span class="badge bg-${data.health_impact.color}">${data.health_impact.category}</span>`;
+        messageText.textContent = data.health_impact.message;
+        messageText.className = `d-block mt-2 ${data.health_impact.text_color}`;
+    } else {
+        categoryBadge.innerHTML = '';
+        messageText.textContent = '';
+    }
+    
+    // AQI Composition
+    document.getElementById('aqi_composition').innerHTML = `
+        <div class="row g-2 text-start">
+            <div class="col-6"><small>PM2.5: <strong>${data.pm25 || '--'}</strong></small></div>
+            <div class="col-6"><small>PM10: <strong>${data.pm10 || '--'}</strong></small></div>
+            <div class="col-6"><small>NO2: <strong>${data.no2 || '--'}</strong></small></div>
+            <div class="col-6"><small>SO2: <strong>${data.so2 || '--'}</strong></small></div>
+            <div class="col-6"><small>CO: <strong>${data.co || '--'}</strong></small></div>
+            <div class="col-6"><small>O3: <strong>${data.o3 || '--'}</strong></small></div>
+        </div>
+    `;
+    
+    // Weather Data
+    document.getElementById('weather_data').innerHTML = `
+        <div class="row g-3">
+            <div class="col-6">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-thermometer-half fa-2x text-danger me-2"></i>
+                    <div>
+                        <small class="text-muted">Temperature</small>
+                        <h5 class="mb-0">${data.temperature || '--'}°C</h5>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-tint fa-2x text-info me-2"></i>
+                    <div>
+                        <small class="text-muted">Humidity</small>
+                        <h5 class="mb-0">${data.humidity || '--'}%</h5>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-wind fa-2x text-primary me-2"></i>
+                    <div>
+                        <small class="text-muted">Wind Speed</small>
+                        <h5 class="mb-0">${data.wind_speed || '--'} km/h</h5>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-cloud-rain fa-2x text-secondary me-2"></i>
+                    <div>
+                        <small class="text-muted">Precipitation</small>
+                        <h5 class="mb-0">${data.precipitation || '--'} mm</h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // City Info
+    document.getElementById('city_name').textContent = data.city_name;
+    document.getElementById('city_state').textContent = data.state_name;
+    document.getElementById('trend_city').textContent = data.city_name;
+    
+    document.getElementById('city_stats').innerHTML = `
+        <p class="mb-2"><i class="fas fa-broadcast-tower text-success"></i> Stations: <strong>${data.station_names || 'N/A'}</strong></p>
+        <p class="mb-2"><i class="fas fa-chart-line text-info"></i> <strong>${data.total_readings || 0}</strong> Total AQI Readings</p>
+        <p class="mb-0"><i class="fas fa-calendar text-warning"></i> Last Updated: <strong>${data.last_updated || 'N/A'}</strong></p>
+    `;
+    
+    // Show data source indicator
+    if (data.data_source) {
+        console.log(`Data Source: ${data.data_source}`);
+    }
+    
+    // Load trends chart with actual data
+    console.log('Trends data:', data.trends);
+    if (data.trends && data.trends.months && data.trends.months.length > 0) {
+        updateTrends(data.trends);
+    } else {
+        console.error('No trends data available');
+        document.getElementById('trendsChart').parentElement.innerHTML = '<p class="text-muted text-center py-4">No historical AQI data available for 2024</p>';
+    }
+}
+
+// Display sample data for demo
+function displaySampleData(cityName) {
+    const sampleData = {
+        city_name: cityName,
+        state_name: 'India',
+        live_aqi: Math.floor(Math.random() * 200) + 50,
+        pm25: Math.floor(Math.random() * 100) + 20,
+        pm10: Math.floor(Math.random() * 150) + 30,
+        no2: Math.floor(Math.random() * 80) + 10,
+        so2: Math.floor(Math.random() * 50) + 5,
+        co: (Math.random() * 2).toFixed(1),
+        o3: Math.floor(Math.random() * 60) + 10,
+        temperature: Math.floor(Math.random() * 15) + 20,
+        humidity: Math.floor(Math.random() * 30) + 50,
+        wind_speed: Math.floor(Math.random() * 20) + 5,
+        precipitation: (Math.random() * 10).toFixed(1),
+        stations: Math.floor(Math.random() * 10) + 3,
+        total_readings: Math.floor(Math.random() * 5000) + 1000,
+        last_updated: new Date().toLocaleString()
+    };
+    displayCityData(sampleData);
+}
+
+// Get AQI color
+function getAQIColor(aqi) {
+    if (aqi <= 50) return 'success';
+    if (aqi <= 100) return 'warning';
+    if (aqi <= 150) return 'orange';
+    if (aqi <= 200) return 'danger';
+    return 'dark';
+}
+
+// Update trends chart
+function updateTrends(trendsData) {
+    console.log('updateTrends called with:', trendsData);
+    
+    if (!trendsData) {
+        console.error('No trends data provided');
+        return;
+    }
+    
+    const monthFilter = document.getElementById('monthFilter');
+    const month = monthFilter ? monthFilter.value : 'all';
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    
+    // Prepare data arrays for all 12 months
+    let avgData = new Array(12).fill(null);
+    let maxData = new Array(12).fill(null);
+    let minData = new Array(12).fill(null);
+    let maxDates = new Array(12).fill('');
+    let minDates = new Array(12).fill('');
+    
+    // Fill in available data
+    if (trendsData.months && trendsData.months.length > 0) {
+        console.log(`Processing ${trendsData.months.length} months of data`);
+        trendsData.months.forEach((monthNum, index) => {
+            const idx = monthNum - 1; // Convert to 0-based index
+            avgData[idx] = trendsData.avg_aqi[index];
+            maxData[idx] = trendsData.max_aqi[index];
+            minData[idx] = trendsData.min_aqi[index];
+            maxDates[idx] = trendsData.max_dates[index];
+            minDates[idx] = trendsData.min_dates[index];
+        });
+    } else {
+        console.warn('No monthly data available');
+    }
+    
+    // Filter by selected month if not "all"
+    let labels = monthNames;
+    if (month !== 'all') {
+        const monthIdx = parseInt(month) - 1;
+        labels = [monthNames[monthIdx]];
+        avgData = [avgData[monthIdx]];
+        maxData = [maxData[monthIdx]];
+        minData = [minData[monthIdx]];
+    }
+    
+    const ctx = document.getElementById('trendsChart');
+    if (!ctx) {
+        console.error('Canvas element not found');
+        return;
+    }
+    
+    if (window.trendsChartInstance) {
+        window.trendsChartInstance.destroy();
+    }
+    
+    console.log('Creating chart with data:', { avgData, maxData, minData });
+    
+    window.trendsChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Average AQI',
+                data: avgData,
+                borderColor: 'rgb(54, 162, 235)',
+                backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                tension: 0.4,
+                spanGaps: true
+            }, {
+                label: 'Max AQI',
+                data: maxData,
+                borderColor: 'rgb(255, 99, 132)',
+                backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                tension: 0.4,
+                spanGaps: true
+            }, {
+                label: 'Min AQI',
+                data: minData,
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                tension: 0.4,
+                spanGaps: true
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                tooltip: {
+                    callbacks: {
+                        afterLabel: function(context) {
+                            const monthIdx = context.dataIndex;
+                            if (context.dataset.label === 'Max AQI' && maxDates[monthIdx]) {
+                                return 'Date: ' + maxDates[monthIdx];
+                            }
+                            if (context.dataset.label === 'Min AQI' && minDates[monthIdx]) {
+                                return 'Date: ' + minDates[monthIdx];
+                            }
+                            return '';
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'AQI Value'
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Month filter change handler
+document.addEventListener('DOMContentLoaded', function() {
+    const monthFilter = document.getElementById('monthFilter');
+    if (monthFilter) {
+        monthFilter.addEventListener('change', function() {
+            if (currentCityData && currentCityData.trends) {
+                updateTrends(currentCityData.trends);
+            }
+        });
+    }
+});
+
+// Enter key support
+document.getElementById('citySearchInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        searchCity();
+    }
+});
+</script>
+{% endblock %}
+

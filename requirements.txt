@@ -1,0 +1,42 @@
+# ===================================
+# DCDS Project - Python Dependencies
+# Air Quality Monitoring System
+# ===================================
+
+# Flask Framework
+Flask==3.0.0
+Werkzeug==3.0.1
+
+# MySQL Database Connector
+mysql-connector-python==8.2.0
+
+# Alternative: SQLAlchemy (if needed)
+# SQLAlchemy==2.0.23
+# PyMySQL==1.1.0
+
+# Security
+bcrypt==4.1.1
+
+# Data Processing
+pandas==2.1.4
+numpy==1.26.2
+
+# Excel Support (optional)
+openpyxl==3.1.2
+xlsxwriter==3.1.9
+
+# PDF Generation (optional)
+reportlab==4.0.7
+
+# Environment Variables
+python-dotenv==1.0.0
+
+# Date/Time Utilities
+python-dateutil==2.8.2
+
+# Development Tools (Optional)
+# Flask-DebugToolbar==0.14.1
+# Flask-Testing==0.8.1
+
+# Production Server (Optional)
+gunicorn==21.2.0

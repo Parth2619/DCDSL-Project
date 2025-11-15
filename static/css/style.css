@@ -1,0 +1,420 @@
+/* ===================================
+   DCDS Project - Custom Stylesheet
+   Air Quality Monitoring System
+   =================================== */
+
+/* ========== Global Styles ========== */
+:root {
+    --primary-color: #667eea;
+    --secondary-color: #764ba2;
+    --success-color: #28a745;
+    --danger-color: #dc3545;
+    --warning-color: #ffc107;
+    --info-color: #17a2b8;
+    --light-bg: #f8f9fa;
+    --dark-text: #2c3e50;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f5f7fa;
+    color: var(--dark-text);
+}
+
+/* ========== Navigation ========== */
+.navbar {
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.navbar-brand {
+    font-size: 1.5rem;
+    font-weight: 700;
+    transition: transform 0.3s;
+}
+
+.navbar-brand:hover {
+    transform: scale(1.05);
+}
+
+.nav-link {
+    font-weight: 500;
+    transition: all 0.3s;
+    margin: 0 5px;
+}
+
+.nav-link:hover {
+    transform: translateY(-2px);
+    color: #fff !important;
+}
+
+/* ========== Cards ========== */
+.card {
+    border-radius: 15px;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important;
+}
+
+.card-header {
+    border-radius: 15px 15px 0 0 !important;
+    font-weight: 600;
+}
+
+/* ========== Statistics Cards ========== */
+.stats-card {
+    border-radius: 15px;
+    transition: all 0.3s;
+}
+
+.stats-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important;
+}
+
+.stats-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: white;
+}
+
+.stats-icon.bg-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.stats-icon.bg-success {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+}
+
+.stats-icon.bg-info {
+    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+}
+
+.stats-icon.bg-warning {
+    background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+}
+
+/* ========== Buttons ========== */
+.btn {
+    border-radius: 10px;
+    padding: 10px 20px;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #5568d3 0%, #6a3f8f 100%);
+}
+
+/* ========== Tables ========== */
+.table {
+    background: white;
+    border-radius: 10px;
+}
+
+.table thead th {
+    background-color: var(--light-bg);
+    border: none;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    padding: 15px;
+}
+
+.table tbody tr {
+    transition: all 0.3s;
+}
+
+.table tbody tr:hover {
+    background-color: #f8f9fa;
+    transform: scale(1.01);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+/* ========== Badges ========== */
+.badge {
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+/* ========== Forms ========== */
+.form-control,
+.form-select {
+    border-radius: 10px;
+    border: 2px solid #e0e0e0;
+    padding: 12px 15px;
+    transition: all 0.3s;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.form-label {
+    font-weight: 600;
+    color: var(--dark-text);
+    margin-bottom: 8px;
+}
+
+/* ========== Modals ========== */
+.modal-content {
+    border-radius: 20px;
+    border: none;
+    box-shadow: 0 10px 50px rgba(0,0,0,0.3);
+}
+
+.modal-header {
+    border-radius: 20px 20px 0 0;
+    border: none;
+}
+
+.modal-footer {
+    border: none;
+}
+
+/* ========== Timeline ========== */
+.timeline-item {
+    padding-left: 10px;
+    border-left: 3px solid #e0e0e0;
+    position: relative;
+}
+
+.timeline-item:last-child {
+    border-left: none;
+}
+
+.timeline-icon {
+    font-size: 1.2rem;
+}
+
+/* ========== Alerts ========== */
+.alert {
+    border-radius: 10px;
+    border: none;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+/* ========== Footer ========== */
+footer {
+    margin-top: auto;
+    border-top: 1px solid #e0e0e0;
+}
+
+/* ========== Animations ========== */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.5s ease-in;
+}
+
+/* ========== Scrollbar ========== */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--secondary-color);
+}
+
+/* ========== Responsive ========== */
+@media (max-width: 768px) {
+    .stats-card {
+        margin-bottom: 20px;
+    }
+    
+    .table-responsive {
+        font-size: 0.85rem;
+    }
+    
+    .navbar-brand {
+        font-size: 1.2rem;
+    }
+}
+
+/* ========== DataTables Custom Styling ========== */
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+    padding: 5px 10px;
+    margin: 0 2px;
+    border-radius: 5px;
+}
+
+.dataTables_wrapper .dataTables_filter input {
+    border-radius: 10px;
+    border: 2px solid #e0e0e0;
+    padding: 8px 15px;
+}
+
+/* ========== Chart Containers ========== */
+canvas {
+    max-height: 400px;
+}
+
+/* ========== Loading Spinner ========== */
+.spinner {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid var(--primary-color);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* ========== Utility Classes ========== */
+.shadow-custom {
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+}
+
+.rounded-custom {
+    border-radius: 15px;
+}
+
+.text-gradient {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+
+
+/* ========== Datalist / Autocomplete Styles ========== */
+input[list]::-webkit-calendar-picker-indicator {
+    display: none;
+}
+
+/* Remove all borders and decorations from datalist options */
+datalist {
+    border: none !important;
+}
+
+datalist option {
+    border: none !important;
+    text-decoration: none !important;
+    border-bottom: none !important;
+    outline: none !important;
+}
+
+datalist option:hover,
+datalist option:focus,
+datalist option:active {
+    border: none !important;
+    text-decoration: none !important;
+    border-bottom: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* Remove underline from input field */
+#citySearchInput {
+    border-bottom: 1px solid #dee2e6 !important;
+}
+
+#citySearchInput:hover {
+    border-bottom: 1px solid #dee2e6 !important;
+}
+
+#citySearchInput:focus {
+    outline: none;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    border-bottom: 1px solid #dee2e6 !important;
+}
+
+/* Ensure the input group doesn't add extra borders */
+.input-group .form-control.border-start-0.border-end-0 {
+    border-bottom: 1px solid #dee2e6 !important;
+}
+
+.input-group .form-control.border-start-0.border-end-0:focus {
+    border-bottom: 1px solid #dee2e6 !important;
+}
+
+
+/* ========== Hide Scrollbars for Tables ========== */
+.table-responsive {
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.table-responsive::-webkit-scrollbar {
+    display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.table-responsive {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+}
+
+/* Also hide scrollbars for any div with overflow */
+div[style*="overflow"] {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+}
+
+div[style*="overflow"]::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+}
+
+/* ========== Print Styles ========== */
+@media print {
+    .navbar,
+    .btn,
+    footer {
+        display: none;
+    }
+    
+    .card {
+        border: 1px solid #ddd;
+        box-shadow: none;
+    }
+}

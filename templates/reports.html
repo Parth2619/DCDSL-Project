@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+
+{% block title %}Reports & Analytics{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <h2 class="mb-4"><i class="fas fa-file-chart"></i> Reports & Analytics</h2>
+    
+    <!-- Export Options -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-download"></i> Export Data</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <a href="{{ url_for('export_csv', table_name='cities') }}" class="btn btn-outline-primary w-100">
+                                <i class="fas fa-city"></i> Cities Data
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{{ url_for('export_csv', table_name='stations') }}" class="btn btn-outline-success w-100">
+                                <i class="fas fa-broadcast-tower"></i> Stations Data
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{{ url_for('export_csv', table_name='aqi') }}" class="btn btn-outline-info w-100">
+                                <i class="fas fa-chart-line"></i> AQI Data
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{{ url_for('export_csv', table_name='vehicle_info') }}" class="btn btn-outline-warning w-100">
+                                <i class="fas fa-car"></i> Vehicle Data
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- AQI Trends Chart -->
+    <div class="row mb-4">
+        <div class="col-lg-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0">
+                    <h5 class="mb-0"><i class="fas fa-chart-area text-primary"></i> AQI Trends (Last 12 Months)</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="aqiTrendChart" height="60"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Emissions by City -->
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0">
+                    <h5 class="mb-0"><i class="fas fa-smog text-danger"></i> Top 10 Cities by Emissions</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="emissionsChart" height="60"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Statistics Table -->
+    <div class="row mt-4">
+        <div class="col-lg-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0">
+                    <h5 class="mb-0"><i class="fas fa-table text-success"></i> Emissions Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>City</th>
+                                    <th>CO2 Emissions (tonnes/year)</th>
+                                    <th>PM2.5 Emissions (tonnes/year)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for emission in emissions %}
+                                <tr>
+                                    <td><strong>{{ emission.city_name }}</strong></td>
+                                    <td><span class="badge bg-danger">{{ "{:,.2f}".format(emission.total_co2_emission) }}</span></td>
+                                    <td><span class="badge bg-warning">{{ "{:,.2f}".format(emission.total_pm25_emission) }}</span></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // AQI Trends Line Chart
+    const aqiTrendsData = {{ aqi_trends | tojson | safe }};
+    const trendLabels = aqiTrendsData.map(item => item.month);
+    const trendValues = aqiTrendsData.map(item => Math.round(item.avg_aqi));
+    
+    const trendCtx = document.getElementById('aqiTrendChart').getContext('2d');
+    new Chart(trendCtx, {
+        type: 'line',
+        data: {
+            labels: trendLabels,
+            datasets: [{
+                label: 'Average AQI',
+                data: trendValues,
+                borderColor: 'rgba(102, 126, 234, 1)',
+                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 5,
+                pointBackgroundColor: 'rgba(102, 126, 234, 1)'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: true
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'AQI Value'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Month'
+                    }
+                }
+            }
+        }
+    });
+    
+    // Emissions Bar Chart
+    const emissionsData = {{ emissions | tojson | safe }};
+    const cityLabels = emissionsData.map(item => item.city_name);
+    const co2Values = emissionsData.map(item => item.total_co2_emission);
+    const pm25Values = emissionsData.map(item => item.total_pm25_emission);
+    
+    const emissionsCtx = document.getElementById('emissionsChart').getContext('2d');
+    new Chart(emissionsCtx, {
+        type: 'bar',
+        data: {
+            labels: cityLabels,
+            datasets: [
+                {
+                    label: 'CO2 Emissions',
+                    data: co2Values,
+                    backgroundColor: 'rgba(255, 99, 132, 0.7)',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 2
+                },
+                {
+                    label: 'PM2.5 Emissions',
+                    data: pm25Values,
+                    backgroundColor: 'rgba(255, 206, 86, 0.7)',
+                    borderColor: 'rgba(255, 206, 86, 1)',
+                    borderWidth: 2
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Emissions (tonnes/year)'
+                    }
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

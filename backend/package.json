@@ -1,0 +1,22 @@
+{
+  "name": "air-quality-backend",
+  "version": "2.0.0",
+  "description": "Air Quality Backend API - Full Specification",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": ["air-quality", "mysql", "express"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2",
+    "mysql2": "^3.6.5",
+    "dotenv": "^16.3.1",
+    "multer": "^1.4.5-lts.1",
+    "cors": "^2.8.5",
+    "csv-parse": "^5.5.2"
+  }
+}

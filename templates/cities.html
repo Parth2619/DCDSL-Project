@@ -1,0 +1,402 @@
+{% extends "base.html" %}
+
+{% block title %}Cities Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-city"></i> Cities Management</h2>
+        {% if role == 'admin' %}
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCityModal">
+            <i class="fas fa-plus"></i> Add New City
+        </button>
+        {% endif %}
+    </div>
+    
+    <!-- Average AQI by City -->
+    <div class="row mb-4">
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-wind"></i> Average Air Quality Index by City</h5>
+                    <select class="form-select form-select-sm w-auto" onchange="sortAQI(this.value)">
+                        <option value="aqi_desc" {% if aqi_sort == 'aqi_desc' %}selected{% endif %}>Highest AQI First</option>
+                        <option value="aqi_asc" {% if aqi_sort == 'aqi_asc' %}selected{% endif %}>Lowest AQI First</option>
+                        <option value="city_asc" {% if aqi_sort == 'city_asc' %}selected{% endif %}>City Name (A-Z)</option>
+                        <option value="city_desc" {% if aqi_sort == 'city_desc' %}selected{% endif %}>City Name (Z-A)</option>
+                    </select>
+                </div>
+                <div class="card-body">
+                    <canvas id="aqiChart" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top N Cities - Health Impact -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-danger text-white">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h5 class="mb-0"><i class="fas fa-hospital"></i> Top Cities - Health Impact</h5>
+                        <select class="form-select form-select-sm w-auto" onchange="changeHealthLimit(this.value)">
+                            <option value="3" {% if health_limit == 3 %}selected{% endif %}>Top 3</option>
+                            <option value="5" {% if health_limit == 5 %}selected{% endif %}>Top 5</option>
+                            <option value="10" {% if health_limit == 10 %}selected{% endif %}>Top 10</option>
+                            <option value="20" {% if health_limit == 20 %}selected{% endif %}>Top 20</option>
+                            <option value="50" {% if health_limit == 50 %}selected{% endif %}>Top 50</option>
+                        </select>
+                    </div>
+                    <select class="form-select form-select-sm" onchange="sortHealth(this.value)" style="max-width: 300px;">
+                        <option value="cases_desc" {% if health_sort == 'cases_desc' %}selected{% endif %}>Most Cases First</option>
+                        <option value="cases_asc" {% if health_sort == 'cases_asc' %}selected{% endif %}>Least Cases First</option>
+                        <option value="respiratory_desc" {% if health_sort == 'respiratory_desc' %}selected{% endif %}>Respiratory Cases</option>
+                        <option value="lung_cancer_desc" {% if health_sort == 'lung_cancer_desc' %}selected{% endif %}>Lung Cancer Cases</option>
+                        <option value="city_asc" {% if health_sort == 'city_asc' %}selected{% endif %}>City Name (A-Z)</option>
+                    </select>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                        <table class="table table-sm table-hover">
+                            <thead class="table-light sticky-top">
+                                <tr>
+                                    <th>City</th>
+                                    <th>Respiratory</th>
+                                    <th>Lung Cancer</th>
+                                    <th>Asthma</th>
+                                    <th>Total Cases</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in health_data %}
+                                <tr>
+                                    <td><strong>{{ item.city_name }}</strong></td>
+                                    <td><span class="badge bg-warning">{{ "{:,}".format(item.respiratory_cases) }}</span></td>
+                                    <td><span class="badge bg-danger">{{ "{:,}".format(item.lung_cancer_cases) }}</span></td>
+                                    <td><span class="badge bg-info">{{ "{:,}".format(item.asthma_cases) }}</span></td>
+                                    <td><span class="badge bg-dark">{{ "{:,}".format(item.total_cases) }}</span></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cities Table -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-secondary text-white">
+            <h5 class="mb-0"><i class="fas fa-table"></i> All Cities</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover" id="citiesTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th>City ID</th>
+                            <th>City Name</th>
+                            <th>Pin Code</th>
+                            <th>State</th>
+                            <th>Stations</th>
+                            <th>AQI Records</th>
+                            {% if role == 'admin' %}
+                            <th>Actions</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for city in cities %}
+                        <tr>
+                            <td>{{ city.city_id }}</td>
+                            <td><strong>{{ city.city_name }}</strong></td>
+                            <td>{{ city.pin_code }}</td>
+                            <td>{{ city.state_name }}</td>
+                            <td><span class="badge bg-info">{{ city.station_count }}</span></td>
+                            <td><span class="badge bg-success">{{ city.aqi_count }}</span></td>
+                            {% if role == 'admin' %}
+                            <td>
+                                <button class="btn btn-sm btn-warning update-aqi-btn" 
+                                        data-city='{{ city | tojson | safe }}' title="Update AQI">
+                                    <i class="fas fa-cloud"></i> AQI
+                                </button>
+                                <button class="btn btn-sm btn-danger" 
+                                        onclick="deleteCity({{ city.city_id }}, '{{ city.city_name }}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                            {% endif %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add City Modal -->
+<div class="modal fade" id="addCityModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="fas fa-plus"></i> Add New City</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('add_city') }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">City ID <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" name="city_id" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">City Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="city_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Pin Code <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="pin_code" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">State Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="state_name" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add City</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Update AQI Modal -->
+<div class="modal fade" id="updateAQIModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title"><i class="fas fa-cloud"></i> Update AQI Values</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" id="updateAQIForm">
+                <div class="modal-body">
+                    <input type="hidden" name="city_id" id="aqi_city_id">
+                    <h6 class="text-primary mb-3">City: <span id="aqi_city_name"></span></h6>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">AQI Value <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" name="aqi_value" id="aqi_value" 
+                                   min="0" max="500" required>
+                            <small class="text-muted">Range: 0-500</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Date <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" name="date" id="aqi_date" required>
+                        </div>
+                    </div>
+                    
+                    <h6 class="text-secondary mt-3 mb-2">Pollutant Levels (µg/m³)</h6>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">PM2.5</label>
+                            <input type="number" step="0.01" class="form-control" name="pm25" id="aqi_pm25" min="0">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">PM10</label>
+                            <input type="number" step="0.01" class="form-control" name="pm10" id="aqi_pm10" min="0">
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">NO₂</label>
+                            <input type="number" step="0.01" class="form-control" name="no2" id="aqi_no2" min="0">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">SO₂</label>
+                            <input type="number" step="0.01" class="form-control" name="so2" id="aqi_so2" min="0">
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">CO</label>
+                            <input type="number" step="0.01" class="form-control" name="co" id="aqi_co" min="0">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">O₃</label>
+                            <input type="number" step="0.01" class="form-control" name="o3" id="aqi_o3" min="0">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning"><i class="fas fa-save"></i> Update AQI</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteCityModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="fas fa-trash"></i> Delete City</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete <strong id="delete_city_name"></strong>?</p>
+                <p class="text-danger"><small>This action cannot be undone!</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="POST" id="deleteCityForm" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Sorting functions
+    function sortAQI(sortType) {
+        const urlParams = new URLSearchParams(window.location.search);
+        urlParams.set('aqi_sort', sortType);
+        window.location.search = urlParams.toString();
+    }
+
+    function sortHealth(sortType) {
+        const urlParams = new URLSearchParams(window.location.search);
+        urlParams.set('health_sort', sortType);
+        window.location.search = urlParams.toString();
+    }
+
+    function changeHealthLimit(limit) {
+        const urlParams = new URLSearchParams(window.location.search);
+        urlParams.set('health_limit', limit);
+        window.location.search = urlParams.toString();
+    }
+
+    // AQI Chart
+    const aqiData = {{ aqi_data | tojson | safe }};
+    console.log('🔍 DEBUG: AQI Data received from backend:', aqiData);
+    console.log('🔍 DEBUG: Number of cities with AQI data:', aqiData.length);
+    if (aqiData.length > 0) {
+        console.log('🔍 DEBUG: First city sample:', aqiData[0]);
+        aqiData.forEach((city, index) => {
+            console.log(`  City ${index + 1}: ${city.city_name} - Avg AQI: ${city.avg_aqi}`);
+        });
+    } else {
+        console.error('❌ NO AQI DATA RECEIVED! Chart will be empty!');
+    }
+    const aqiCtx = document.getElementById('aqiChart').getContext('2d');
+    new Chart(aqiCtx, {
+        type: 'bar',
+        data: {
+            labels: aqiData.map(d => d.city_name),
+            datasets: [{
+                label: 'Average AQI',
+                data: aqiData.map(d => d.avg_aqi),
+                backgroundColor: aqiData.map(d => {
+                    if (d.avg_aqi <= 50) return 'rgba(0, 255, 0, 0.7)';
+                    if (d.avg_aqi <= 100) return 'rgba(255, 255, 0, 0.7)';
+                    if (d.avg_aqi <= 150) return 'rgba(255, 165, 0, 0.7)';
+                    if (d.avg_aqi <= 200) return 'rgba(255, 0, 0, 0.7)';
+                    if (d.avg_aqi <= 300) return 'rgba(128, 0, 128, 0.7)';
+                    return 'rgba(128, 0, 0, 0.7)';
+                }),
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'AQI Value'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        afterLabel: function(context) {
+                            return 'Readings: ' + aqiData[context.dataIndex].reading_count;
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    function updateAQI(city) {
+        console.log('updateAQI called with:', city);
+        
+        try {
+            document.getElementById('aqi_city_id').value = city.city_id;
+            document.getElementById('aqi_city_name').textContent = city.city_name;
+            
+            // Set today's date as default
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('aqi_date').value = today;
+
+            document.getElementById('updateAQIForm').action = '/cities/update-aqi/' + city.city_id;
+
+            console.log('Opening modal updateAQIModal');
+            const modal = new bootstrap.Modal(document.getElementById('updateAQIModal'));
+            modal.show();
+        } catch (error) {
+            console.error('Error in updateAQI:', error);
+            alert('Error: ' + error.message);
+        }
+    }
+    
+    function deleteCity(cityId, cityName) {
+        document.getElementById('delete_city_name').textContent = cityName;
+        document.getElementById('deleteCityForm').action = '/cities/delete/' + cityId;
+        
+        new bootstrap.Modal(document.getElementById('deleteCityModal')).show();
+    }
+    
+    // Initialize DataTable (if you want search/sort features)
+    $(document).ready(function() {
+        $('#citiesTable').DataTable({
+            "pageLength": 10,
+            "order": [[1, "asc"]]
+        });
+        
+        // Event delegation for dynamically rendered buttons
+        $('#citiesTable').on('click', '.update-aqi-btn', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const cityData = $(this).data('city');
+            console.log('Button clicked! City data:', cityData);
+            if (cityData) {
+                updateAQI(cityData);
+            } else {
+                alert('Error: No city data found!');
+            }
+        });
+    });
+</script>
+
+<!-- DataTables CSS and JS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+{% endblock %}
